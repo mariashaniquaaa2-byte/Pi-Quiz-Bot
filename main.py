@@ -982,12 +982,26 @@ async def handle_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             break
 
+# ===================== دوال إضافية =====================
+
+async def post_init(application: Application):
+    """تُستدعى بعد بدء حلقة الأحداث، لبدء الجدولة."""
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        send_scheduled_question,
+        IntervalTrigger(minutes=INTERVAL_MINUTES),
+        args=[application]
+    )
+    scheduler.start()
+    print(f"⏰ تم بدء الجدولة: سؤال كل {INTERVAL_MINUTES} دقيقة.")
+
 # ===================== تشغيل البوت =====================
 
 def main():
     initialize_questions()
 
-    app = Application.builder().token(TOKEN).build()
+    # إنشاء التطبيق مع ربط post_init
+    app = Application.builder().token(TOKEN).post_init(post_init).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help))
@@ -1000,16 +1014,10 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_quiz_answer, pattern="^quiz_"))
     app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_"))
 
-    async def post_init(application: Application):
-    """تُستدعى بعد بدء حلقة الأحداث، لبدء الجدولة."""
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(
-        send_scheduled_question,
-        IntervalTrigger(minutes=INTERVAL_MINUTES),
-        args=[application]
-    )
-    scheduler.start()
-    print(f"⏰ تم بدء الجدولة: سؤال كل {INTERVAL_MINUTES} دقيقة.")
+    # ❌ تم نقل تعريف post_init إلى خارج main، ولم يعد هناك كود مجدول هنا
+
+    print("🧠 Pi Quiz Bot يعمل مع الأسئلة المدمجة والإرسال الدوري...")
+    app.run_polling()
 
 
 if __name__ == "__main__":
