@@ -1000,18 +1000,16 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_quiz_answer, pattern="^quiz_"))
     app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_"))
 
+    async def post_init(application: Application):
+    """تُستدعى بعد بدء حلقة الأحداث، لبدء الجدولة."""
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         send_scheduled_question,
         IntervalTrigger(minutes=INTERVAL_MINUTES),
-        args=[app]
+        args=[application]
     )
-    print(f"⏰ تم جدولة إرسال الأسئلة كل {INTERVAL_MINUTES} دقائق (6 أسئلة في الساعة).")
-
     scheduler.start()
-
-    print("🧠 Pi Quiz Bot يعمل مع الأسئلة المدمجة وإرسال دوري...")
-    app.run_polling()
+    print(f"⏰ تم بدء الجدولة: سؤال كل {INTERVAL_MINUTES} دقيقة.")
 
 
 if __name__ == "__main__":
